@@ -1,0 +1,46 @@
+services:
+  backend:
+    container_name: hr_agent_backend
+    build: ./backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    container_name: hr_agent_frontend
+    build: ./frontend
+    ports:
+      - "8888:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+
+  postgres:
+    container_name: hr_agent_postgres
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_DB: hr_agent_db
+      POSTGRES_USER: hr_user
+      POSTGRES_PASSWORD: hr_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hr_user -d hr_agent_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
