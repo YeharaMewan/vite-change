@@ -92,6 +92,20 @@ export default function EnhancedHRChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingText]);
 
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.add('sidebar-open');
+    } else {
+      document.body.classList.remove('sidebar-open');
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('sidebar-open');
+    };
+  }, [sidebarOpen]);
+
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -273,7 +287,7 @@ export default function EnhancedHRChat() {
   const formatMessage = (text) => {
     // Safety check for undefined text
     if (!text || typeof text !== 'string') {
-      return <div>No message content</div>;
+      return <div className="text-white">No message content</div>;
     }
     
     // Enhanced message formatting with better markdown support
@@ -282,19 +296,19 @@ export default function EnhancedHRChat() {
       if (line.startsWith('- ') || line.startsWith('* ')) {
         return (
           <div key={i} className="flex items-start gap-2 my-1">
-            <span className="text-blue-400 font-bold text-sm mt-1">•</span>
-            <span className="flex-1">{line.slice(2)}</span>
+            <span className="text-white font-bold text-sm mt-1">•</span>
+            <span className="flex-1 text-white">{line.slice(2)}</span>
           </div>
         );
       } else if (line.startsWith('## ')) {
         return (
-          <h3 key={i} className="text-lg font-semibold mt-4 mb-2 text-blue-300">
+          <h3 key={i} className="text-lg font-semibold mt-4 mb-2 text-white">
             {line.slice(3)}
           </h3>
         );
       } else if (line.startsWith('**') && line.endsWith('**')) {
         return (
-          <div key={i} className="font-semibold my-2">
+          <div key={i} className="font-semibold my-2 text-white">
             {line.slice(2, -2)}
           </div>
         );
@@ -302,7 +316,7 @@ export default function EnhancedHRChat() {
         return <div key={i} className="h-2" />;
       } else {
         return (
-          <div key={i} className={i > 0 ? 'mt-2' : ''}>
+          <div key={i} className={`text-white ${i > 0 ? 'mt-2' : ''}`}>
             {line}
           </div>
         );
@@ -311,60 +325,62 @@ export default function EnhancedHRChat() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      {/* Enhanced Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-80 bg-gray-950 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col border-r border-gray-800`}>
+    <div className="flex h-screen bg-gray-900 text-white overflow-hidden custom-scrollbar">
+      {/* Enhanced Sidebar with better mobile responsiveness */}
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-full sm:w-80 bg-gray-950 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col border-r border-gray-800 custom-scrollbar`}>
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <SparklesIcon className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-800">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <SparklesIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="font-semibold text-lg">HR Assistant</h1>
+              <h1 className="font-semibold text-base sm:text-lg">HR Assistant</h1>
               <p className="text-xs text-gray-400">Powered by AI</p>
             </div>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 hover:bg-gray-800 rounded-lg"
+            className="lg:hidden p-1.5 sm:p-2 hover:bg-gray-800 rounded-lg flex items-center justify-center icon-center"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-gray-800">
+        <div className="p-3 sm:p-4 border-b border-gray-800">
           <button
             onClick={createNewSession}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 font-medium"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 font-medium"
           >
             <PlusIcon className="w-4 h-4" />
-            New Conversation
+            <span className="hidden xs:inline">New Conversation</span>
+            <span className="xs:hidden">New Chat</span>
           </button>
         </div>
 
         {/* Sessions List */}
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 overflow-y-auto p-1 sm:p-2 custom-scrollbar">
           <div className="space-y-1">
             {sessions.length > 0 ? (
               sessions.map((sessionId) => (
                 <div
                   key={sessionId}
-                  className={`group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                  className={`group flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 touch-target ${
                     sessionId === currentSessionId
                       ? 'bg-gray-800 text-white border border-gray-700'
-                      : 'hover:bg-gray-800/50 text-gray-300 hover:text-white'
+                      : 'hover:bg-gray-800/50 text-gray-300 hover:text-white active:bg-gray-800/70'
                   }`}
                   onClick={() => resumeSession(sessionId)}
                 >
-                  <div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <DocumentTextIcon className="w-4 h-4" />
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <DocumentTextIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">
-                      Chat {sessionId.substring(5, 13)}
+                      <span className="hidden sm:inline">Chat {sessionId.substring(5, 13)}</span>
+                      <span className="sm:hidden">{sessionId.substring(5, 9)}</span>
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 hidden sm:block">
                       Recent conversation
                     </div>
                   </div>
@@ -373,7 +389,7 @@ export default function EnhancedHRChat() {
                       e.stopPropagation();
                       deleteSession(sessionId);
                     }}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-600 rounded-lg transition-all duration-200"
+                    className="opacity-0 group-hover:opacity-100 p-1 sm:p-1.5 hover:bg-red-600 active:bg-red-700 rounded-lg transition-all duration-200 touch-target flex items-center justify-center icon-center"
                   >
                     <TrashIcon className="w-3 h-3" />
                   </button>
@@ -381,57 +397,59 @@ export default function EnhancedHRChat() {
               ))
             ) : (
               <div className="text-center text-gray-500 text-sm p-4">
-                No conversations yet
+                <div className="hidden sm:block">No conversations yet</div>
+                <div className="sm:hidden">No chats</div>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content with improved mobile responsiveness */}
       <div className="flex-1 flex flex-col min-w-0 relative">
         {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-800">
+        <div className="lg:hidden flex items-center justify-between p-3 sm:p-4 border-b border-gray-800">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 hover:bg-gray-800 rounded-lg"
+            className="p-1.5 sm:p-2 hover:bg-gray-800 rounded-lg flex items-center justify-center icon-center"
           >
-            <Bars3Icon className="w-6 h-6" />
+            <Bars3Icon className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <SparklesIcon className="w-5 h-5" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <h1 className="text-lg font-semibold">HR Assistant</h1>
+            <h1 className="text-base sm:text-lg font-semibold">HR Assistant</h1>
           </div>
+          <div className="w-8 sm:w-10"></div> {/* Spacer for centering */}
         </div>
 
         {/* Messages Container */}
         <div className="flex-1 flex flex-col">
           {messages.length === 0 && showSuggestions ? (
-            /* Enhanced Welcome Screen */
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <h1 className="text-5xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-2">
+            /* Enhanced Welcome Screen with mobile optimization */
+            <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 text-center">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-2 px-2">
                 {randomGreeting}
               </h1>
               
-              {/* Enhanced Smart Suggestions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl w-full mb-8">
+              {/* Enhanced Smart Suggestions with mobile-first grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-4xl w-full mb-4 sm:mb-6 lg:mb-8">
                 {smartSuggestions.map((suggestion, index) => (
                   <button
                     key={index}
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className="group p-6 bg-gray-800/50 hover:bg-gray-800 rounded-2xl text-left transition-all duration-300 border border-gray-700 hover:border-gray-600 hover:scale-105"
+                    className="group p-4 sm:p-5 lg:p-6 bg-gray-800/50 hover:bg-gray-800 active:bg-gray-800/70 rounded-xl sm:rounded-2xl text-left transition-all duration-300 border border-gray-700 hover:border-gray-600 active:scale-95 sm:hover:scale-105 touch-target"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                        <suggestion.icon className="w-5 h-5 text-white" />
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <suggestion.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
-                      <div className="flex-1">
-                        <div className="text-lg font-semibold mb-2 text-white group-hover:text-blue-300 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-white group-hover:text-blue-300 transition-colors">
                           {suggestion.title}
                         </div>
-                        <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                        <div className="text-xs sm:text-sm text-gray-400 group-hover:text-gray-300 transition-colors line-clamp-2">
                           {suggestion.description}
                         </div>
                       </div>
@@ -441,39 +459,39 @@ export default function EnhancedHRChat() {
               </div>
             </div>
           ) : (
-            /* Enhanced Messages Display */
-            <div className="flex-1 overflow-y-auto">
-              <div className="max-w-4xl mx-auto px-4 py-8">
-                <div className="space-y-6">
+            /* Enhanced Messages Display with mobile optimization */
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
+                <div className="space-y-4 sm:space-y-6">
                   {messages.map((message) => (
                     <div key={message.id} className="group">
-                      <div className={`flex gap-4 ${message.sender === 'user' ? 'justify-end' : ''}`}>
+                      <div className={`flex gap-2 sm:gap-3 lg:gap-4 ${message.sender === 'user' ? 'justify-end' : ''}`}>
                         {message.sender === 'assistant' && (
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                            <SparklesIcon className="w-5 h-5 text-white" />
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                            <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                           </div>
                         )}
                         
-                        <div className={`flex-1 max-w-3xl ${message.sender === 'user' ? 'text-right' : ''}`}>
+                        <div className={`flex-1 max-w-[280px] sm:max-w-md lg:max-w-3xl ${message.sender === 'user' ? 'text-right' : ''}`}>
                           {message.sender === 'user' && (
-                            <div className="text-gray-400 text-sm mb-2 font-medium flex items-center gap-2 justify-end">
+                            <div className="text-gray-400 text-xs sm:text-sm mb-1 sm:mb-2 font-medium flex items-center gap-1 sm:gap-2 justify-end">
                               <span>You</span>
-                              <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center">
+                              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-700 rounded-full flex items-center justify-center">
                                 <span className="text-xs font-semibold">Y</span>
                               </div>
                             </div>
                           )}
                           <div className={`relative ${
                             message.sender === 'user' 
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-2xl rounded-tr-sm inline-block max-w-lg shadow-lg' 
-                              : 'text-gray-100 bg-gray-800/30 p-4 rounded-2xl'
+                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 sm:p-4 rounded-2xl rounded-tr-sm inline-block shadow-lg' 
+                              : 'text-white bg-gray-800/30 p-3 sm:p-4 rounded-2xl'
                           }`}>
-                            <div className="prose prose-invert max-w-none">
+                            <div className="prose prose-invert prose-sm sm:prose max-w-none text-sm sm:text-base text-white chat-message">
                               {formatMessage(message.text)}
                             </div>
                             {message.sender === 'assistant' && (
-                              <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-700">
-                                <CheckCircleIcon className="w-4 h-4 text-green-400" />
+                              <div className="flex items-center gap-1 sm:gap-2 mt-2 sm:mt-3 pt-2 border-t border-gray-700">
+                                <CheckCircleIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
                                 <span className="text-xs text-gray-400">{message.timestamp}</span>
                               </div>
                             )}
@@ -489,29 +507,29 @@ export default function EnhancedHRChat() {
                     </div>
                   ))}
 
-                  {/* Enhanced Typing Indicator */}
+                  {/* Enhanced Typing Indicator with mobile optimization */}
                   {(isTyping || streamingText) && (
                     <div className="group">
-                      <div className="flex gap-4">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
-                          <SparklesIcon className="w-5 h-5 text-white" />
+                      <div className="flex gap-2 sm:gap-3 lg:gap-4">
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
+                          <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
-                        <div className="flex-1 max-w-3xl">
+                        <div className="flex-1 max-w-[280px] sm:max-w-md lg:max-w-3xl">
                           {streamingText ? (
-                            <div className="text-gray-100 bg-gray-800/30 p-4 rounded-2xl">
-                              <div className="prose prose-invert max-w-none">
+                            <div className="text-white bg-gray-800/30 p-3 sm:p-4 rounded-2xl">
+                              <div className="prose prose-invert prose-sm sm:prose max-w-none text-sm sm:text-base text-white chat-message">
                                 {formatMessage(streamingText)}
                               </div>
-                              <div className="inline-block w-2 h-5 bg-blue-400 animate-pulse ml-1"></div>
+                              <div className="inline-block w-2 h-4 sm:h-5 bg-blue-400 animate-pulse ml-1"></div>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 text-gray-400">
                               <div className="flex gap-1">
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce"></div>
                               </div>
-                              <span className="text-sm">HR Assistant is thinking...</span>
+                              <span className="text-xs sm:text-sm">HR Assistant is thinking...</span>
                             </div>
                           )}
                         </div>
@@ -524,10 +542,10 @@ export default function EnhancedHRChat() {
             </div>
           )}
 
-          {/* Enhanced Input Area */}
-          <div className="p-4 border-t border-gray-800">
+          {/* Enhanced Input Area with mobile optimization */}
+          <div className="p-3 sm:p-4 border-t border-gray-800 bg-gray-900">
             <div className="max-w-4xl mx-auto">
-              <div className="relative bg-gray-800 rounded-2xl border-2 border-gray-700 focus-within:border-blue-500 transition-all duration-200 shadow-lg">
+              <div className="relative bg-gray-800 rounded-xl sm:rounded-2xl border-2 border-gray-700 focus-within:border-blue-500 transition-all duration-200 shadow-lg">
                 <textarea
                   ref={textareaRef}
                   value={input}
@@ -538,38 +556,38 @@ export default function EnhancedHRChat() {
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything about HR policies, leave requests, employees..."
                   rows="1"
-                  className="w-full bg-transparent text-white placeholder-gray-400 border-none outline-none resize-none px-6 py-4 pr-16 max-h-48 text-base"
+                  className="w-full bg-transparent text-white placeholder-gray-400 border-none outline-none resize-none px-4 sm:px-6 py-3 sm:py-4 pr-20 sm:pr-24 max-h-32 sm:max-h-48 text-sm sm:text-base"
                   disabled={isTyping}
                 />
                 
-                {/* Enhanced Input Actions */}
-                <div className="absolute right-3 bottom-3 flex items-center gap-2">
+                {/* Enhanced Input Actions with mobile optimization */}
+                <div className="absolute right-2 sm:right-3 bottom-2 sm:bottom-3 flex items-center gap-1 sm:gap-2">
                   <button
                     onClick={() => alert('Voice input coming soon!')}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-xl transition-all duration-200"
+                    className="p-1.5 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 active:bg-gray-600 rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 touch-target flex items-center justify-center icon-center"
                     disabled={isTyping}
                   >
-                    <MicrophoneIcon className="w-5 h-5" />
+                    <MicrophoneIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                   <button
                     onClick={sendMessage}
                     disabled={!input.trim() || isTyping}
-                    className={`p-2 rounded-xl transition-all duration-200 ${
+                    className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 touch-target flex items-center justify-center icon-center ${
                       input.trim() && !isTyping
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg hover:scale-105'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 active:from-blue-700 active:to-purple-800 shadow-lg'
                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    <ArrowUpIcon className="w-5 h-5" />
+                    <ArrowUpIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
-                <div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 sm:mt-3 text-xs text-gray-500 gap-1 sm:gap-0">
+                <div className="line-clamp-2 sm:line-clamp-1">
                   HR Assistant can make mistakes. Please verify important information.
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                   <span>Online</span>
                 </div>
