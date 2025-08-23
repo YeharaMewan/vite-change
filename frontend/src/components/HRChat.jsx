@@ -23,6 +23,44 @@ import {
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
 
+// HR agent ප්‍රාරම්භ පණිවිඩයන්
+const initialGreetings = [
+    "What can I help with?",
+    "What's on your mind today?",
+    "Where should we begin?",
+    "Ready when you are.",
+    "How can I help you today?",
+    "I'm here to assist. What's your question?",
+];
+
+// Enhanced suggestions based on HR context
+const smartSuggestions = [
+  {
+    icon: DocumentTextIcon,
+    title: "Leave Request",
+    description: "Apply for time off or check leave balance",
+    prompt: "I want to request leave for next week. Can you help me with the process?"
+  },
+  {
+    icon: UserGroupIcon,
+    title: "Employee Directory", 
+    description: "Find team members and contact info",
+    prompt: "Who works in the IT department? I need to contact someone from there."
+  },
+  {
+    icon: InformationCircleIcon,
+    title: "HR Policies",
+    description: "Learn about company policies and procedures", 
+    prompt: "What's our work from home policy? How many days can I work remotely?"
+  },
+  {
+    icon: ClockIcon,
+    title: "Attendance",
+    description: "Check attendance records and history",
+    prompt: "Show me the attendance records for this month"
+  }
+];
+
 export default function EnhancedHRChat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -34,44 +72,6 @@ export default function EnhancedHRChat() {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
-
-  // HR agent ප්‍රාරම්භ පණිවිඩයන්
-  const initialGreetings = [
-      "What can I help with?",
-      "What's on your mind today?",
-      "Where should we begin?",
-      "Ready when you are.",
-      "How can I help you today?",
-      "I'm here to assist. What's your question?",
-  ];
-  
-  // Enhanced suggestions based on HR context
-  const smartSuggestions = [
-    {
-      icon: DocumentTextIcon,
-      title: "Leave Request",
-      description: "Apply for time off or check leave balance",
-      prompt: "I want to request leave for next week. Can you help me with the process?"
-    },
-    {
-      icon: UserGroupIcon,
-      title: "Employee Directory", 
-      description: "Find team members and contact info",
-      prompt: "Who works in the IT department? I need to contact someone from there."
-    },
-    {
-      icon: InformationCircleIcon,
-      title: "HR Policies",
-      description: "Learn about company policies and procedures", 
-      prompt: "What's our work from home policy? How many days can I work remotely?"
-    },
-    {
-      icon: ClockIcon,
-      title: "Attendance",
-      description: "Check attendance records and history",
-      prompt: "Show me the attendance records for this month"
-    }
-  ];
 
   // අහඹු ආරම්භක පණිවිඩය ගබඩා කිරීම සඳහා නව state එකක්
   const [randomGreeting, setRandomGreeting] = useState('');
@@ -143,9 +143,18 @@ export default function EnhancedHRChat() {
       const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}`);
       const data = await response.json();
       
+      // Transform backend message format to frontend format
+      const transformedMessages = (data.messages || []).map((msg, index) => ({
+        id: Date.now() + index,
+        text: msg.content || '', // Ensure text is never undefined
+        sender: msg.role === 'user' ? 'user' : 'assistant',
+        timestamp: msg.ts ? new Date(msg.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+        status: msg.role === 'user' ? 'sent' : 'received'
+      }));
+      
       setCurrentSessionId(sessionId);
-      setMessages(data.messages || []);
-      setShowSuggestions(data.messages?.length === 0);
+      setMessages(transformedMessages);
+      setShowSuggestions(transformedMessages.length === 0);
       setSidebarOpen(false);
     } catch (error) {
       console.error('Failed to resume session:', error);
@@ -262,6 +271,11 @@ export default function EnhancedHRChat() {
   };
 
   const formatMessage = (text) => {
+    // Safety check for undefined text
+    if (!text || typeof text !== 'string') {
+      return <div>No message content</div>;
+    }
+    
     // Enhanced message formatting with better markdown support
     const lines = text.split('\n');
     return lines.map((line, i) => {
