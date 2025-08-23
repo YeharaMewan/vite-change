@@ -1,0 +1,18 @@
+# Development Dockerfile for Vite React application
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies for development
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Expose development port
+EXPOSE 3000
+
+# Start development server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
