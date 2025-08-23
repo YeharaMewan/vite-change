@@ -89,7 +89,14 @@ export default function EnhancedHRChat() {
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Smooth scroll to bottom when new messages arrive
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest'
+      });
+    }
   }, [messages, streamingText]);
 
   // Prevent body scroll when sidebar is open on mobile
@@ -325,9 +332,9 @@ export default function EnhancedHRChat() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white overflow-hidden custom-scrollbar">
+    <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
       {/* Enhanced Sidebar with better mobile responsiveness */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-full sm:w-80 bg-gray-950 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col border-r border-gray-800 custom-scrollbar`}>
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-full sm:w-80 bg-gray-950 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col border-r border-gray-800 sidebar-scrollbar`}>
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-800">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -359,7 +366,7 @@ export default function EnhancedHRChat() {
         </div>
 
         {/* Sessions List */}
-        <div className="flex-1 overflow-y-auto p-1 sm:p-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-1 sm:p-2 sidebar-scrollbar">
           <div className="space-y-1">
             {sessions.length > 0 ? (
               sessions.map((sessionId) => (
@@ -425,10 +432,10 @@ export default function EnhancedHRChat() {
         </div>
 
         {/* Messages Container */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {messages.length === 0 && showSuggestions ? (
             /* Enhanced Welcome Screen with mobile optimization */
-            <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 text-center">
+            <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 text-center overflow-y-auto">
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-2 px-2">
                 {randomGreeting}
               </h1>
@@ -460,8 +467,8 @@ export default function EnhancedHRChat() {
             </div>
           ) : (
             /* Enhanced Messages Display with mobile optimization */
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-              <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden chat-scrollbar messages-container">
+              <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 pb-8 h-full">
                 <div className="space-y-4 sm:space-y-6">
                   {messages.map((message) => (
                     <div key={message.id} className="group">
@@ -538,7 +545,7 @@ export default function EnhancedHRChat() {
                   )}
                 </div>
               </div>
-              <div ref={messagesEndRef} />
+              <div ref={messagesEndRef} className="h-4" />
             </div>
           )}
 

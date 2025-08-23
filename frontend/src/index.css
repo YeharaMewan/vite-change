@@ -29,22 +29,90 @@
 }
 
 @layer components {
-  /* Custom scrollbar for webkit browsers */
+  /* Modern custom scrollbar for webkit browsers */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(75, 85, 99, 0.6) transparent;
+  }
+  
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
+    height: 8px;
   }
   
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
+    border-radius: 4px;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: rgba(75, 85, 99, 0.5);
-    border-radius: 3px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 0.2s ease;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(75, 85, 99, 0.7);
+    background: rgba(75, 85, 99, 0.8);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:active {
+    background: rgba(99, 102, 241, 0.8);
+  }
+
+  /* Modern scrollbar for chat messages */
+  .chat-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.6) transparent;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .chat-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 8px 0;
+  }
+  
+  .chat-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.6));
+    border-radius: 6px;
+    transition: all 0.3s ease;
+  }
+  
+  .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9));
+    transform: scaleX(1.2);
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Sidebar scrollbar */
+  .sidebar-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(55, 65, 81, 0.6) transparent;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(55, 65, 81, 0.5);
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(75, 85, 99, 0.8);
   }
 
   /* Line clamping utility */
@@ -77,6 +145,19 @@
   
   .icon-center svg {
     flex-shrink: 0;
+  }
+
+  /* Smooth scroll behavior for messages */
+  .messages-container {
+    scroll-behavior: smooth;
+    scroll-padding-bottom: 20px;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  
+  .messages-container::-webkit-scrollbar-track {
+    margin-bottom: 20px;
   }
 
   /* Ensure chat messages are always white */
@@ -117,13 +198,13 @@
     padding: 1rem;
   }
   
-  @screen sm {
+  @media (min-width: 640px) {
     .mobile-padding {
       padding: 1.5rem;
     }
   }
   
-  @screen lg {
+  @media (min-width: 1024px) {
     .mobile-padding {
       padding: 2rem;
     }
