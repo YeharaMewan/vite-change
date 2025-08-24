@@ -5,6 +5,7 @@ psycopg2-binary
 pgvector
 langchain
 langgraph
+langgraph-supervisor
 langchain-openai
 python-dotenv
 langchain-community

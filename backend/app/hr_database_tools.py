@@ -1,12 +1,11 @@
 import os
 from datetime import datetime
-from langchain_community.vectorstores.pgvector import PGVector
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.tools import tool
 from dotenv import load_dotenv
 from sqlalchemy import text, inspect
 from sqlalchemy.engine import Engine
 import sqlparse
+from langchain_openai import ChatOpenAI
 
 from .database import SessionLocal, engine
 from . import models
@@ -38,7 +37,7 @@ def is_read_only_query(sql_query: str) -> bool:
     stmt = parsed[0]
     return stmt.get_type() == 'SELECT'
 
-# --- The New, Intelligent Text-to-SQL Tool ---
+# --- HR Database Tools ---
 @tool
 def answer_database_question(natural_language_query: str) -> str:
     """
@@ -50,7 +49,7 @@ def answer_database_question(natural_language_query: str) -> str:
     db_schema = get_db_schema(engine)
     sql_generation_llm = ChatOpenAI(model="gpt-4o", temperature=0)
     
-    # Few-shot examples (unchanged)
+    # Few-shot examples
     few_shot_examples = """
     Here are some example questions and their corresponding SQL queries:
     
@@ -64,7 +63,7 @@ def answer_database_question(natural_language_query: str) -> str:
     SQL: SELECT b.total_days, b.days_used, (b.total_days - b.days_used) AS remaining_days FROM leave_balances b JOIN employees e ON b.employee_id = e.id WHERE e.name ILIKE '%Kamal%';
     """
 
-    # SQL generation prompt (unchanged)
+    # SQL generation prompt
     sql_prompt_text = f"""
     You are a PostgreSQL expert. Your task is to write a single, safe, read-only SQL query to answer a user's question based on the provided database schema.
     
@@ -101,7 +100,7 @@ def answer_database_question(natural_language_query: str) -> str:
             column_names = result.keys()
             result_list = [dict(zip(column_names, row)) for row in rows]
             
-            # --- NEW, IMPROVED SYNTHESIS PROMPT ---
+            # Synthesis
             synthesis_llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
             synthesis_prompt = f"""
             You are a helpful assistant. Your task is to present database results to a user in a clear and friendly manner.
@@ -127,42 +126,6 @@ def answer_database_question(natural_language_query: str) -> str:
             print(f"--- SQL Execution Error: {e} ---")
             return f"I encountered an error while trying to fetch the data. It seems there's a problem with the generated query: {e}"
 
-# --- Other Tools ---
-@tool
-def search_hr_policies(query: str) -> str:
-    """Searches and retrieves relevant HR policy documents based on a user's query."""
-    # ... (implementation is unchanged)
-    connection_string = os.getenv("DATABASE_URL")
-    collection_name = "hr_policies"
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-    try:
-        db = PGVector(connection_string=connection_string, embedding_function=embeddings, collection_name=collection_name)
-        docs = db.similarity_search(query, k=3)
-        if not docs: return "No relevant HR policy documents found for this query."
-        context = "Retrieved HR Policy Information:\n\n"
-        for doc in docs:
-            context += f"---\nDocument: {doc.metadata.get('document_name', 'N/A')}\nContent: {doc.page_content}\n---\n"
-        return context
-    except Exception as e:
-        return f"An error occurred while searching HR policies: {e}"
-
-@tool
-def request_leave(employee_name: str, leave_date_str: str, reason: str) -> str:
-    """Submits a leave request for a specific employee."""
-    # ... (implementation is unchanged)
-    with SessionLocal() as db:
-        employee = db.query(models.Employee).filter(models.Employee.name.ilike(f"%{employee_name}%")).first()
-        if not employee: return f"Employee '{employee_name}' not found. Cannot submit leave request."
-        try:
-            leave_date = datetime.strptime(leave_date_str, "%Y-%m-%d").date()
-        except ValueError:
-            return "Invalid date format. Please use YYYY-MM-DD."
-        leave_request = models.LeaveRequest(employee_id=employee.id, leave_date=leave_date, reason=reason, status='pending')
-        db.add(leave_request)
-        db.commit()
-        return f"Leave request for {employee_name} on {leave_date_str} has been submitted successfully. Status is pending."
-    
-
 @tool
 def list_all_departments() -> str:
     """
@@ -174,9 +137,7 @@ def list_all_departments() -> str:
             departments = db.query(models.Department.name).all()
             if not departments:
                 return "No departments found in the database."
-            # Convert list of tuples to a simple list of strings
             department_names = [name for (name,) in departments]
-            # The agent's synthesis step will format this list, no LLM needed here.
             return f"Here are all the departments: {department_names}"
         except Exception as e:
             return f"An error occurred while fetching departments: {e}"
@@ -197,11 +158,45 @@ def list_all_employees() -> str:
         except Exception as e:
             return f"An error occurred while fetching employees: {e}"
 
-# The new, smarter toolset
-all_tools = [
-    search_hr_policies,
-    request_leave,
+@tool
+def get_employee_details(employee_name: str) -> str:
+    """
+    Get detailed information about a specific employee including their department, role, contact information.
+    """
+    with SessionLocal() as db:
+        try:
+            employee = db.query(models.Employee).filter(
+                models.Employee.name.ilike(f"%{employee_name}%")
+            ).first()
+            
+            if not employee:
+                return f"Employee '{employee_name}' not found in the database."
+            
+            dept_name = employee.department.name if employee.department else "Not assigned"
+            
+            details = {
+                "name": employee.name,
+                "email": employee.email,
+                "role": employee.role or "Not specified",
+                "department": dept_name,
+                "phone": employee.phone_number or "Not provided",
+                "status": "Active" if employee.is_active else "Inactive"
+            }
+            
+            return f"""Employee Details for {employee.name}:
+- **Email:** {details['email']}
+- **Role:** {details['role']}
+- **Department:** {details['department']}
+- **Phone:** {details['phone']}
+- **Status:** {details['status']}"""
+            
+        except Exception as e:
+            return f"An error occurred while fetching employee details: {e}"
+
+# Export all database tools
+database_tools = [
     answer_database_question,
     list_all_departments,
     list_all_employees,
+    get_employee_details
 ]

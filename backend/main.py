@@ -1,11 +1,12 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_core.messages import HumanMessage
 
-# Import the compiled agent executor from the 'app' package
-from app.agent import agent_executor, AgentState
+# Import the compiled HR agent system
+from app.agents import hr_agent_system
 from app.memory_manager import MemoryManager
+from app.streaming_endpoint import chat_stream_endpoint
 from datetime import datetime
 from fastapi import HTTPException
 from typing import Optional
@@ -29,43 +30,62 @@ async def read_root():
 @app.post("/chat", tags=["Agent"])
 async def chat_with_agent(query: str, session_id: Optional[str] = None):
     """
-    Receives a user query and returns the agent's response.
+    Standard synchronous chat endpoint (non-streaming)
+    """
+    return await _chat_sync(query, session_id)
+
+@app.post("/chat/stream", tags=["Agent"])
+async def chat_with_agent_stream(query: str, session_id: Optional[str] = None):
+    """
+    Streaming chat endpoint with real-time responses
+    """
+    return await chat_stream_endpoint(query, session_id)
+
+async def _chat_sync(query: str, session_id: Optional[str] = None):
+    """
+    Internal synchronous chat function
     """
     try:
         sid = session_id or "default"
 
-        # store user message
+        # Store user message in memory
         memory.add_message(sid, "user", query, {"ts": datetime.now().isoformat()})
 
-        # gather context
+        # Gather context from memory
         ctx = memory.get_context(sid)
 
-        # Define the initial state for the graph
-        initial_state: AgentState = {
-            "messages": [HumanMessage(content=query)],
-            "session_id": sid,
-            "memory_context": ctx,
-            "user_preferences": {},
+        # Create context string from recent messages
+        context_snippet = ""
+        if ctx:
+            context_snippet = "Recent conversation context:\n" + "\n".join(
+                [f"- {m.get('role')}: {m.get('content')[:120]}..." for m in ctx[-3:]]
+            )
+
+        # Prepare the user message with context
+        user_content = query
+        if context_snippet:
+            user_content = f"{context_snippet}\n\nCurrent question: {query}"
+
+        # Define the initial state for the supervisor system
+        initial_state = {
+            "messages": [HumanMessage(content=user_content)]
         }
         
-        # Invoke the agent graph asynchronously
-        response_stream = agent_executor.astream(initial_state)
+        # Invoke the HR agent system
+        response = hr_agent_system.invoke(initial_state)
         
-        final_response = None
-        async for event in response_stream:
-            if "agent" in event:
-                # The final message from the agent after the loop
-                final_response = event["agent"]["messages"][-1]
+        # Extract the final response
+        final_message = response["messages"][-1]
+        response_text = final_message.content
 
-        if final_response:
-             response_text = final_response.content
-        else:
-            response_text = "The agent could not process the request."
+        # Store assistant response in memory
+        memory.add_message(sid, "assistant", response_text, {"ts": datetime.now().isoformat()})
 
         return JSONResponse(content={"response": response_text})
+        
     except Exception as e:
         # Return a more descriptive error to the frontend
-        print(f"Error during agent invocation: {e}") # Log error to backend console
+        print(f"Error during agent invocation: {e}")  # Log error to backend console
         return JSONResponse(content={"error": f"Agent Error: {e}"}, status_code=500)
 
 
@@ -105,7 +125,13 @@ async def get_session_messages(session_id: str, limit: int = 100):
         )
         return {
             "session_id": session_id,
-            "messages": [{"role": m.role, "content": m.content, "ts": m.timestamp.isoformat() if m.timestamp else ""} for m in msgs],
+            "messages": [
+                {
+                    "role": m.role, 
+                    "content": m.content, 
+                    "ts": m.timestamp.isoformat() if m.timestamp else ""
+                } for m in msgs
+            ],
         }
 
 
@@ -119,7 +145,12 @@ async def create_session(session_id: Optional[str] = None):
         exists = db.query(ConversationMemory).filter(ConversationMemory.session_id == sid).first()
         if exists:
             return {"session_id": sid, "created": False}
-        mem = ConversationMemory(session_id=sid, key_points=[], user_preferences={}, context_window=[])
+        mem = ConversationMemory(
+            session_id=sid, 
+            key_points=[], 
+            user_preferences={}, 
+            context_window=[]
+        )
         db.add(mem)
         db.commit()
         return {"session_id": sid, "created": True}

@@ -89,15 +89,22 @@ export default function EnhancedHRChat() {
   }, []);
 
   useEffect(() => {
-    // Smooth scroll to bottom when new messages arrive
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'end',
-        inline: 'nearest'
-      });
-    }
-  }, [messages, streamingText]);
+    // Auto scroll to bottom when new messages arrive or streaming text updates
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        // Use scrollIntoView with end alignment for better mobile behavior
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end'
+        });
+      }
+    };
+
+    // Delay scroll slightly to ensure DOM has updated
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [messages, streamingText, isTyping]);
 
   // Prevent body scroll when sidebar is open on mobile
   useEffect(() => {
@@ -236,6 +243,13 @@ export default function EnhancedHRChat() {
     setStreamingText('');
     adjustTextareaHeight();
 
+    // Force scroll to bottom after adding user message
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+    }, 50);
+
     try {
       // Backend API call
       const sidParam = currentSessionId ? `&session_id=${encodeURIComponent(currentSessionId)}` : '';
@@ -251,6 +265,12 @@ export default function EnhancedHRChat() {
       for (let i = 0; i <= aiResponse.length; i++) {
         currentText = aiResponse.slice(0, i);
         setStreamingText(currentText);
+        
+        // Scroll during streaming to keep up with text
+        if (i % 50 === 0 && messagesEndRef.current) { // Every 50 characters
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+        
         await new Promise(resolve => setTimeout(resolve, Math.random() * 30 + 10));
       }
       
@@ -264,6 +284,14 @@ export default function EnhancedHRChat() {
 
       setMessages(prev => [...prev, assistantMessage]);
       setStreamingText('');
+      
+      // Final scroll to bottom after message is complete
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      }, 100);
+      
     } catch (error) {
       console.error('Error:', error);
       const errorMessage = {
@@ -467,9 +495,10 @@ export default function EnhancedHRChat() {
             </div>
           ) : (
             /* Enhanced Messages Display with mobile optimization */
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden chat-scrollbar messages-container">
-              <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 pb-8 h-full">
-                <div className="space-y-4 sm:space-y-6">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden chat-scrollbar messages-container auto-scroll-bottom" 
+                 style={{ scrollBehavior: 'smooth' }}>
+              <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 pb-8 flex flex-col">
+                <div className="space-y-4 sm:space-y-6 flex-1">
                   {messages.map((message) => (
                     <div key={message.id} className="group">
                       <div className={`flex gap-2 sm:gap-3 lg:gap-4 ${message.sender === 'user' ? 'justify-end' : ''}`}>
@@ -544,8 +573,9 @@ export default function EnhancedHRChat() {
                     </div>
                   )}
                 </div>
+                {/* Scroll anchor - increased height for better mobile behavior */}
+                <div ref={messagesEndRef} className="h-8 scroll-anchor" />
               </div>
-              <div ref={messagesEndRef} className="h-4" />
             </div>
           )}
 

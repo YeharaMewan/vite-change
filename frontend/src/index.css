@@ -154,10 +154,28 @@
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
+    /* Maintain scroll position when content changes */
+    overflow-anchor: none;
   }
   
   .messages-container::-webkit-scrollbar-track {
     margin-bottom: 20px;
+  }
+
+  /* Auto-scroll to bottom behavior */
+  .auto-scroll-bottom {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .auto-scroll-bottom > * {
+    flex-shrink: 0;
+  }
+
+  /* Scroll anchor for better auto-scrolling */
+  .scroll-anchor {
+    scroll-margin-bottom: 20px;
+    scroll-snap-align: end;
   }
 
   /* Ensure chat messages are always white */
