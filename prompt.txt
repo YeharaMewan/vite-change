@@ -1,77 +1,45 @@
-You are a senior AI/ML engineer tasked with refactoring and improving an existing HR chatbot application. Your goal is to apply modern best practices to make the application more robust, user-friendly, and maintainable. The application consists of a backend (Python with FastAPI) and a frontend (React with Vite).
+You are a senior AI/ML engineer and a master of React, Python, and Tailwind CSS. Your task is to refactor and improve an existing HR chatbot application by applying modern best practices. The application consists of a backend (Python/FastAPI) and a frontend (React/Vite).
 
-Current Architecture:
+Your goal is to perform a full-stack refactoring to create a robust, user-friendly, and maintainable application. You will update three key backend files and two key frontend files.
 
-Backend: backend/app/agents.py, backend/app/hr_analytics_tools.py, backend/app/streaming_endpoint.py
+### Backend Refactoring
+**1. Refactor Agent Naming (`backend/app/agents.py`)**
+- Go to `backend/app/agents.py`.
+- For each agent defined, keep the internal Python variable name (e.g., `hr_database_agent`) but add a user-friendly `display_name` attribute.
+- For example, `hr_database_agent.display_name = "HR Database Assistant"`. Do this for all six agents.
+- Update the `create_hr_supervisor_system` function to use these new `display_name` attributes in the prompt, making the system's internal descriptions consistent with the user-facing names.
 
-Agents are defined with non-user-friendly names (e.g., hr_analytics_agent).
+**2. Implement Structured Action Output (`backend/app/hr_analytics_tools.py`)**
+- Go to `backend/app/hr_analytics_tools.py`.
+- Add a new tool function named `generate_quarterly_report`.
+- This function should simulate generating a report by returning a structured JSON object.
+- The JSON object must contain the key `"action_type"` with the value `"download_report"` and a `"url"` key pointing to a dummy report file (e.g., `"/path/to/dummy/report.pdf"`).
 
-Tools return raw data or text that may not be formatted for the user.
+### Frontend Refactoring
+**1. Consolidate UI and Streaming Functionality (`frontend/src/components/HRChat.jsx`)**
+- Your primary task is to completely refactor `HRChat.jsx` by combining its UI with the streaming logic from `StreamingHRChat.jsx`.
+- **Remove the synchronous chat logic** and integrate the `useStreamingChat` hook to handle real-time responses.
+- Implement a responsive sidebar that is collapsible on mobile (`lg` breakpoint) and fixed on desktop. A new hamburger menu icon (`Bars3Icon`) in the main header will toggle the sidebar's visibility on mobile.
+- Use a dark theme, with `bg-gray-950` for the sidebar and `bg-gray-900` for the main chat area.
+- Redesign the chat message bubbles:
+    - User messages should use a vibrant gradient (`bg-gradient-to-r from-blue-600 to-purple-600`).
+    - AI responses should use a subtler background (`bg-gray-800/30`).
+- Update the input area to be a single, large, rounded component with a prominent send button styled with the same vibrant gradient.
+- Replace the manual markdown formatting logic with the `ReactMarkdown` component to ensure proper rendering of bold, italic, and other markdown syntax.
+- **Integrate the Action Message Component**: Create a new component or logic within the message rendering loop to detect the `{"action_type": "download_report", ...}` JSON payload. If detected, this logic should render a styled "Download Report" button with the provided URL.
+- The AI's author name must be consistently displayed as `"HR Assistant"` instead of a dynamic or generic ID.
 
-Frontend: frontend/src/App.jsx, frontend/src/components/StreamingHRChat.jsx
+**2. Enhance Custom CSS (`frontend/src/index.css`)**
+- Go to `frontend/src/index.css`.
+- Add custom Tailwind CSS classes to support the new UI. This includes classes for custom scrollbars (`.sidebar-scrollbar`, `.chat-scrollbar`) and responsive utilities (e.g., `safe-area-padding`).
 
-The chat history author is a generated ID (e.g., Chat 17560150).
+---
 
-Messages containing Markdown are not rendered correctly, showing raw asterisks (e.g., "Performance Management").
+**Output:**
 
-There is no component to handle special "actions" like clickable buttons.
+Please provide the complete, updated code for the following files:
 
-Task Requirements:
-
-Refactor Agent Naming (Backend):
-
-Go to backend/app/agents.py.
-
-Change the internal agent names (the Python variable names) to be more descriptive and follow standard Python conventions (e.g., hr_analytics_agent is fine).
-
-Crucially, introduce a new, user-friendly display_name attribute for each agent class. For example, HR_ANALYTICS_AGENT should have a display_name of "HR Analytics Assistant". The HR_PERFORMANCE_AGENT should be renamed to "HR Performance Assistant," and so on.
-
-Update the code to use this new display_name when generating the chat history or any user-facing messages. This ensures a consistent, human-readable name for the bot.
-
-Improve Output Formatting (Frontend):
-
-Go to frontend/src/components/StreamingHRChat.jsx.
-
-The raw asterisks (**) are due to the backend sending Markdown. Instead of removing them on the backend, which is bad practice, you should handle the Markdown rendering on the frontend.
-
-Integrate a Markdown rendering library (like react-markdown or a similar solution) to correctly display bold, italic, and other Markdown elements in the streamed chat messages.
-
-Ensure this change does not break the streaming functionality.
-
-Update Chat History Names (Frontend):
-
-Go to frontend/src/components/StreamingHRChat.jsx.
-
-The current author name in the messages state is dynamic. Change the AI's author name to a static, user-friendly string like "HR Assistant".
-
-Update the logic where new messages are added to the messages array to consistently use this new author name for all AI responses.
-
-Implement an Action Component (Frontend & Backend):
-
-Backend (backend/app/hr_analytics_tools.py):
-
-Create a new tool function, for example, generate_quarterly_report. This function will not actually generate a report but will simulate it by returning a JSON object.
-
-The JSON object should have a special key, like "action_type": "download_report", and a url to a placeholder document (e.g., a dummy report file link). This structured output is a best practice for passing actions from the backend to the frontend.
-
-Frontend (frontend/src/components/StreamingHRChat.jsx):
-
-Add a new component called ActionMessage or similar. This component will check the message content for the special "action_type" key.
-
-If the key exists, the component will render a button (e.g., "Download Report") with a link to the url provided in the JSON payload.
-
-Ensure the StreamingHRChat component's message rendering logic is updated to check for this new action type and use the ActionMessage component when appropriate.
-
-The button should be styled to be prominent and user-friendly (e.g., with a background color and some padding).
-
-Output:
-
-Provide the complete, updated code for the following files:
-
-backend/app/agents.py
-
-backend/app/hr_analytics_tools.py
-
-frontend/src/components/StreamingHRChat.jsx
-
-By implementing these changes, you will transform the application into a more professional, functional, and maintainable product. You will demonstrate a mastery of full-stack development best practices, including structured API responses and dynamic frontend rendering.
+1.  `backend/app/agents.py`
+2.  `backend/app/hr_analytics_tools.py`
+3.  `frontend/src/components/HRChat.jsx`
+4.  `frontend/src/index.css`

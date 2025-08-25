@@ -193,6 +193,13 @@ def create_hr_supervisor_system():
             "   - Use for: HR metrics, KPIs, compliance reports, custom reports, turnover analysis, trends\n\n"
             "**Decision Guidelines:**\n"
             "- For employee info, departments, general data → delegate to hr_database_agent\n"
+            "- For policy questions, leave requests, benefits → delegate to hr_policy_agent\n"
+            "- For attendance tracking, daily reports → delegate to hr_attendance_agent\n"
+            "- For performance goals, reviews, feedback → delegate to hr_performance_agent\n"
+            "- For training, skills, learning → delegate to hr_training_agent\n"
+            "- For reports, analytics, KPIs → delegate to hr_analytics_agent\n\n"
+            "Always choose the most appropriate specialized agent based on the user's specific request. "
+            "Provide clear, helpful responses and maintain a professional yet friendly tone."
         )
     )
     

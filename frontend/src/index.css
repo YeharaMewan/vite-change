@@ -2,24 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mobile-first responsive improvements */
 @layer base {
   html {
-    /* Prevent horizontal scrolling on mobile */
     overflow-x: hidden;
-    /* Better text rendering */
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
   }
   
   body {
-    /* Prevent overscroll bounce on iOS */
     overscroll-behavior: none;
-    /* Better touch scrolling on iOS */
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Safe area support for devices with notches */
   .safe-area-padding {
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
@@ -29,39 +23,28 @@
 }
 
 @layer components {
-  /* Modern custom scrollbar for webkit browsers */
-  .custom-scrollbar {
+  .sidebar-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: rgba(75, 85, 99, 0.6) transparent;
+    scrollbar-color: rgba(55, 65, 81, 0.6) transparent;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar {
+    width: 4px;
   }
   
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-track {
+  .sidebar-scrollbar::-webkit-scrollbar-track {
     background: transparent;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(55, 65, 81, 0.5);
     border-radius: 4px;
   }
   
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(75, 85, 99, 0.5);
-    border-radius: 4px;
-    border: 1px solid transparent;
-    background-clip: padding-box;
-    transition: background-color 0.2s ease;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(75, 85, 99, 0.8);
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb:active {
-    background: rgba(99, 102, 241, 0.8);
-  }
-
-  /* Modern scrollbar for chat messages */
   .chat-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgba(99, 102, 241, 0.6) transparent;
@@ -79,152 +62,104 @@
   .chat-scrollbar::-webkit-scrollbar-thumb {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.6));
     border-radius: 6px;
-    transition: all 0.3s ease;
   }
   
   .chat-scrollbar::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9));
-    transform: scaleX(1.2);
   }
 
-  .chat-scrollbar::-webkit-scrollbar-corner {
-    background: transparent;
-  }
-
-  /* Sidebar scrollbar */
-  .sidebar-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(55, 65, 81, 0.6) transparent;
-  }
-
-  .sidebar-scrollbar::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  .sidebar-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .sidebar-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(55, 65, 81, 0.5);
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-  }
-  
-  .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(75, 85, 99, 0.8);
-  }
-
-  /* Line clamping utility */
-  .line-clamp-1 {
+  .sidebar-open {
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-  }
-  
-  .line-clamp-2 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
   }
 
-  /* Touch-friendly interactive elements */
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  /* Perfect icon centering */
-  .icon-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .icon-center svg {
-    flex-shrink: 0;
-  }
-
-  /* Smooth scroll behavior for messages */
-  .messages-container {
-    scroll-behavior: smooth;
-    scroll-padding-bottom: 20px;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    /* Maintain scroll position when content changes */
-    overflow-anchor: none;
-  }
-  
-  .messages-container::-webkit-scrollbar-track {
-    margin-bottom: 20px;
-  }
-
-  /* Auto-scroll to bottom behavior */
-  .auto-scroll-bottom {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .auto-scroll-bottom > * {
-    flex-shrink: 0;
-  }
-
-  /* Scroll anchor for better auto-scrolling */
-  .scroll-anchor {
-    scroll-margin-bottom: 20px;
-    scroll-snap-align: end;
-  }
-
-  /* Ensure chat messages are always white */
-  .chat-message {
-    color: white !important;
-  }
-  
-  .chat-message * {
-    color: white !important;
-  }
-  
-  /* Override prose styling for chat messages */
+  /* Enhanced prose styles for markdown content */
   .prose-invert {
-    color: white !important;
-  }
-  
-  .prose-invert * {
-    color: white !important;
-  }
-}
-
-@layer utilities {
-  /* Responsive text utilities */
-  .text-responsive {
-    font-size: clamp(0.875rem, 2.5vw, 1rem);
-  }
-  
-  .text-responsive-lg {
-    font-size: clamp(1rem, 3vw, 1.25rem);
-  }
-  
-  .text-responsive-xl {
-    font-size: clamp(1.25rem, 4vw, 2rem);
+    color: rgb(229, 231, 235);
   }
 
-  /* Mobile-first spacing */
-  .mobile-padding {
-    padding: 1rem;
+  .prose-invert h1,
+  .prose-invert h2,
+  .prose-invert h3,
+  .prose-invert h4,
+  .prose-invert h5,
+  .prose-invert h6 {
+    color: rgb(243, 244, 246);
   }
-  
-  @media (min-width: 640px) {
-    .mobile-padding {
-      padding: 1.5rem;
+
+  .prose-invert strong {
+    color: rgb(243, 244, 246);
+    font-weight: 600;
+  }
+
+  .prose-invert code {
+    color: rgb(139, 92, 246);
+    background-color: rgba(55, 65, 81, 0.5);
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+  }
+
+  .prose-invert pre {
+    background-color: rgba(17, 24, 39, 0.8);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: 0.5rem;
+  }
+
+  .prose-invert ul,
+  .prose-invert ol {
+    color: rgb(229, 231, 235);
+  }
+
+  .prose-invert li {
+    margin: 0.25rem 0;
+  }
+
+  .prose-invert blockquote {
+    border-left: 4px solid rgb(99, 102, 241);
+    background-color: rgba(55, 65, 81, 0.3);
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    margin: 1rem 0;
+  }
+
+  /* Animation for message appearance */
+  @keyframes slideInUp {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
     }
   }
-  
-  @media (min-width: 1024px) {
-    .mobile-padding {
-      padding: 2rem;
-    }
+
+  .message-enter {
+    animation: slideInUp 0.3s ease-out;
+  }
+
+  /* Gradient text utilities */
+  .text-gradient {
+    background: linear-gradient(135deg, rgb(59, 130, 246), rgb(147, 51, 234));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glassmorphism effect */
+  .glass-effect {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background-color: rgba(17, 24, 39, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Custom shadow styles */
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+
+  .shadow-glow-purple {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
   }
 }
