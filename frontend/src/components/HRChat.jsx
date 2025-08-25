@@ -15,6 +15,7 @@ export default function HRChat() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const { streamChat, isStreaming, streamedResponse, currentActivity } = useStreamingChat();
   const { sessions, loading, error, refetch, createNewSession, deleteSession, getSessionMessages } = useChatHistory();
@@ -129,6 +130,10 @@ export default function HRChat() {
     setSidebarOpen(prev => !prev);
   };
 
+  const handleSidebarCollapseChange = (collapsed) => {
+    setSidebarCollapsed(collapsed);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-900">
       {/* Sidebar */}
@@ -141,6 +146,8 @@ export default function HRChat() {
         onDeleteChat={deleteSession}
         loading={loading}
         error={error}
+        isCollapsed={sidebarCollapsed}
+        onCollapseChange={handleSidebarCollapseChange}
       />
 
       {/* Main Content */}
@@ -148,6 +155,7 @@ export default function HRChat() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-gray-900">
           <div className="flex items-center gap-3">
+            {/* Mobile Sidebar Toggle */}
             <button 
               onClick={toggleSidebar} 
               className="lg:hidden p-2 rounded-md hover:bg-gray-800 transition-colors text-white"
@@ -155,6 +163,7 @@ export default function HRChat() {
             >
               <Bars3Icon className="w-6 h-6" />
             </button>
+            
             <div className="lg:hidden">
               <h1 className="text-lg font-semibold text-white">HR Assistant</h1>
             </div>

@@ -1,9 +1,28 @@
+import { useState, useEffect } from 'react';
+
+const welcomeMessages = [
+  "What can I help with?",
+  "What's on your mind today?", 
+  "Ready when you are.",
+  "What are you working on?",
+  "Good to see you!",
+  "Where should we begin?"
+];
+
 export default function WelcomeMessage() {
+  const [currentMessage, setCurrentMessage] = useState(welcomeMessages[0]);
+
+  useEffect(() => {
+    // Select a random message when component mounts
+    const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
+    setCurrentMessage(welcomeMessages[randomIndex]);
+  }, []);
+
   return (
     <div className="flex flex-col bg-gray-900 items-center justify-center h-full px-4 py-8">
       <div className="text-center max-w-4xl">
         <h1 className="text-4xl font-semibold text-white mb-8">
-          What can I help with?
+          {currentMessage}
         </h1>
         
         {/* Sample prompts */}
