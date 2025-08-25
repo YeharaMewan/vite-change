@@ -129,20 +129,9 @@ def generate_hr_dashboard_metrics(period: str = "current_month") -> str:
             
             for dept_name, emp_count, dept_attendance in dept_result[:5]:  # Top 5 departments
                 dept_attendance = dept_attendance or 0
-                result += f"""
-• **{dept_name}**: {emp_count} employees | {dept_attendance:.1f}% attendance"""
+                result += f"\n• **{dept_name}**: {emp_count} employees | {dept_attendance:.1f}% attendance"
             
-            result += f"""
-
-**🎯 KEY INSIGHTS**
-• {'High' if attendance_rate >= 85 else 'Moderate' if attendance_rate >= 75 else 'Low'} attendance rate overall
-• {'Efficient' if pending_leaves <= 5 else 'Review needed'} leave approval process
-• {'Well-distributed' if total_departments >= 3 else 'Centralized'} workforce structure
-
-**📊 TRENDING METRICS**
-• Attendance: {'↗️ Improving' if attendance_rate >= 80 else '→ Stable' if attendance_rate >= 70 else '↘️ Needs attention'}
-• Leave Management: {'✅ Efficient' if pending_leaves <= 10 else '⚠️ Backlog present'}
-• Workforce: {'📈 Growing' if total_employees >= 10 else '🔄 Stable'}"""
+            result += f"\n\n**🎯 KEY INSIGHTS**\n• {'High' if attendance_rate >= 85 else 'Moderate' if attendance_rate >= 75 else 'Low'} attendance rate overall\n• {'Efficient' if pending_leaves <= 5 else 'Review needed'} leave approval process\n• {'Well-distributed' if total_departments >= 3 else 'Centralized'} workforce structure\n\n**📊 TRENDING METRICS**\n• Attendance: {'↗️ Improving' if attendance_rate >= 80 else '→ Stable' if attendance_rate >= 70 else '↘️ Needs attention'}\n• Leave Management: {'✅ Efficient' if pending_leaves <= 10 else '⚠️ Backlog present'}\n• Workforce: {'📈 Growing' if total_employees >= 10 else '🔄 Stable'} "
             
             return result
             
@@ -241,8 +230,7 @@ def analyze_attendance_patterns(employee_name: str = "", department: str = "", d
                 if day_num < 5:  # Weekdays only
                     day_data = day_attendance[day_num]
                     present_rate = (day_data['Present'] / day_data['Total'] * 100) if day_data['Total'] > 0 else 0
-                    result += f"""
-• **{day_patterns[day_num]}**: {present_rate:.1f}% attendance ({day_data['Present']}/{day_data['Total']})"""
+                    result += f"\n• **{day_patterns[day_num]}**: {present_rate:.1f}% attendance ({day_data['Present']}/{day_data['Total']})"
             
             # Identify trends
             recent_week = [record for record in attendance_data if record[2] >= (end_date - timedelta(days=7))]
@@ -251,30 +239,14 @@ def analyze_attendance_patterns(employee_name: str = "", department: str = "", d
             
             overall_rate = present_count / total_records * 100
             
-            result += f"""
-
-**🔍 Pattern Insights:**
-• Recent Week Attendance: {recent_rate:.1f}%
-• Overall Period Average: {overall_rate:.1f}%
-• Trend: {'↗️ Improving' if recent_rate > overall_rate else '↘️ Declining' if recent_rate < overall_rate - 5 else '→ Stable'}
-
-**⚠️ Recommendations:**"""
+            result += f"\n\n**🔍 Pattern Insights:**\n• Recent Week Attendance: {recent_rate:.1f}%\n• Overall Period Average: {overall_rate:.1f}%\n• Trend: {'↗️ Improving' if recent_rate > overall_rate else '↘️ Declining' if recent_rate < overall_rate - 5 else '→ Stable'}\n\n**⚠️ Recommendations:**"
             
             if overall_rate < 75:
-                result += """
-• Investigate attendance issues and root causes
-• Review workload and work-life balance
-• Consider flexible work arrangements"""
+                result += "\n• Investigate attendance issues and root causes\n• Review workload and work-life balance\n• Consider flexible work arrangements"
             elif overall_rate < 85:
-                result += """
-• Monitor attendance trends closely
-• Provide additional support where needed
-• Recognize good attendance performers"""
+                result += "\n• Monitor attendance trends closely\n• Provide additional support where needed\n• Recognize good attendance performers"
             else:
-                result += """
-• Maintain current attendance standards
-• Continue recognizing excellent attendance
-• Share best practices across teams"""
+                result += "\n• Maintain current attendance standards\n• Continue recognizing excellent attendance\n• Share best practices across teams"
             
             return result
             
@@ -399,24 +371,11 @@ def predict_employee_turnover_risk(lookback_months: int = 6) -> str:
             
             if risk_employees:
                 for emp in risk_employees[:10]:  # Top 10 high-risk employees
-                    result_text += f"""
-
-**{emp['name']}** - Risk Score: {emp['risk_score']}/100
-• Role: {emp['role']}
-• Department: {emp['department']}
-• Attendance Rate: {emp['attendance_rate']:.1f}%
-• Risk Factors: {', '.join(emp['risk_factors']) if emp['risk_factors'] else 'General risk factors'}"""
+                    result_text += f"\n\n**{emp['name']}** - Risk Score: {emp['risk_score']}/100\n• Role: {emp['role']}\n• Department: {emp['department']}\n• Attendance Rate: {emp['attendance_rate']:.1f}%\n• Risk Factors: {', '.join(emp['risk_factors']) if emp['risk_factors'] else 'General risk factors'} "
             else:
                 result_text += "\n✅ No employees identified as high risk!"
             
-            result_text += f"""
-
-**📊 RISK DISTRIBUTION:**
-• High Risk (40-100): {len([e for e in risk_employees if e['risk_score'] >= 40])} employees
-• Moderate Risk (20-39): {len([e for e in employee_data if 20 <= (40 if e in [emp['name'] for emp in risk_employees] else 10) <= 39])} employees  
-• Low Risk (0-19): {len(low_risk_employees)} employees
-
-**🎯 RECOMMENDED ACTIONS:**"""
+            result_text += f"\n\n**📊 RISK DISTRIBUTION:**\n• High Risk (40-100): {len([e for e in risk_employees if e['risk_score'] >= 40])} employees\n• Moderate Risk (20-39): {len([e for e in employee_data if 20 <= (40 if e in [emp['name'] for emp in risk_employees] else 10) <= 39])} employees  \n• Low Risk (0-19): {len(low_risk_employees)} employees\n\n**🎯 RECOMMENDED ACTIONS:**"
             
             if risk_employees:
                 result_text += """
@@ -441,16 +400,7 @@ def predict_employee_turnover_risk(lookback_months: int = 6) -> str:
 3. **Recognize and reward good performance**
 4. **Monitor trends for early warning signs**"""
             
-            result_text += f"""
-
-**📈 SUCCESS METRICS TO TRACK:**
-• Monthly employee satisfaction scores
-• Attendance rate improvements  
-• Reduced absenteeism patterns
-• Employee feedback sentiment
-• Exit interview insights
-
-*Note: This predictive analysis is based on available HR data. Consider conducting employee engagement surveys for more comprehensive insights.*"""
+            result_text += f"\n\n**📈 SUCCESS METRICS TO TRACK:**\n• Monthly employee satisfaction scores\n• Attendance rate improvements  \n• Reduced absenteeism patterns\n• Employee feedback sentiment\n• Exit interview insights\n\n*Note: This predictive analysis is based on available HR data. Consider conducting employee engagement surveys for more comprehensive insights.*"
             
             return result_text
             
@@ -558,22 +508,15 @@ def generate_compliance_report(report_type: str = "attendance", period: str = "c
                 result_text = result_text if 'result_text' in locals() else ""
                 
                 for emp in compliant_employees[:10]:  # First 10 compliant employees
-                    result_text += f"""
-• **{emp['name']}** ({emp['department']})
-  Attendance: {emp['attendance_rate']:.1f}% | Absence: {emp['absence_rate']:.1f}%"""
+                    result_text += f"\n• **{emp['name']}** ({emp['department']})\n  Attendance: {emp['attendance_rate']:.1f}% | Absence: {emp['absence_rate']:.1f}%"
                 
                 if len(compliant_employees) > 10:
                     result_text += f"\n  ... and {len(compliant_employees) - 10} more compliant employees"
                 
-                result_text += f"""
-
-**⚠️ NON-COMPLIANT EMPLOYEES ({len(non_compliant_employees)}):**"""
+                result_text += f"\n\n**⚠️ NON-COMPLIANT EMPLOYEES ({len(non_compliant_employees)}):**"
                 
                 for emp in non_compliant_employees:
-                    result_text += f"""
-• **{emp['name']}** ({emp['department']})
-  Attendance: {emp['attendance_rate']:.1f}% | Absence: {emp['absence_rate']:.1f}%
-  Issues: {'Low attendance' if emp['attendance_rate'] < MIN_ATTENDANCE_RATE else ''} {'High absence' if emp['absence_rate'] > MAX_ABSENCE_RATE else ''}"""
+                    result_text += f"\n• **{emp['name']}** ({emp['department']})\n  Attendance: {emp['attendance_rate']:.1f}% | Absence: {emp['absence_rate']:.1f}%\n  Issues: {'Low attendance' if emp['attendance_rate'] < MIN_ATTENDANCE_RATE else ''} {'High absence' if emp['absence_rate'] > MAX_ABSENCE_RATE else ''}"
                 
                 if not non_compliant_employees:
                     result_text += "\n✅ All employees meet compliance standards!"
@@ -582,14 +525,7 @@ def generate_compliance_report(report_type: str = "attendance", period: str = "c
                 total_employees = len(compliant_employees) + len(non_compliant_employees)
                 compliance_rate = (len(compliant_employees) / total_employees * 100) if total_employees > 0 else 0
                 
-                result_text += f"""
-
-**📈 COMPLIANCE SUMMARY:**
-• Overall Compliance Rate: {compliance_rate:.1f}%
-• Total Employees Reviewed: {total_employees}
-• Requiring Action: {len(non_compliant_employees)}
-
-**🎯 RECOMMENDATIONS:**"""
+                result_text += f"\n\n**📈 COMPLIANCE SUMMARY:**\n• Overall Compliance Rate: {compliance_rate:.1f}%\n• Total Employees Reviewed: {total_employees}\n• Requiring Action: {len(non_compliant_employees)}\n\n**🎯 RECOMMENDATIONS:**"
                 
                 if len(non_compliant_employees) > 0:
                     result_text += """
@@ -775,51 +711,32 @@ def track_hr_kpis(kpi_category: str = "all") -> str:
             
             if "workforce" in kpi_results:
                 wf = kpi_results["workforce"]
-                report += f"""**👥 WORKFORCE KPIs:**
-• Total Active Employees: {wf['total_active_employees']}
-• Total Departments: {wf['total_departments']}
-• Average Team Size: {wf['avg_employees_per_dept']:.1f} employees per department
-
-"""
+                report += f"""**👥 WORKFORCE KPIs:**\n• Total Active Employees: {wf['total_active_employees']}\n• Total Departments: {wf['total_departments']}\n• Average Team Size: {wf['avg_employees_per_dept']:.1f} employees per department\n\n"""
             
             if "attendance" in kpi_results:
                 att = kpi_results["attendance"]
-                report += f"""**📈 ATTENDANCE KPIs:**
-• Attendance Rate: {att['attendance_rate']:.1f}% {'✅' if att['attendance_rate'] >= 85 else '⚠️' if att['attendance_rate'] >= 75 else '❌'}
-• Absence Rate: {att['absence_rate']:.1f}% {'✅' if att['absence_rate'] <= 5 else '⚠️' if att['absence_rate'] <= 10 else '❌'}
-• Leave Utilization: {att['leave_utilization']:.1f}%
-• Total Records: {att['total_attendance_records']}
-
-"""
+                report += f"""**📈 ATTENDANCE KPIs:**\n• Attendance Rate: {att['attendance_rate']:.1f}% {'✅' if att['attendance_rate'] >= 85 else '⚠️' if att['attendance_rate'] >= 75 else '❌'}\n• Absence Rate: {att['absence_rate']:.1f}% {'✅' if att['absence_rate'] <= 5 else '⚠️' if att['absence_rate'] <= 10 else '❌'}\n• Leave Utilization: {att['leave_utilization']:.1f}%\n• Total Records: {att['total_attendance_records']}\n\n"""
             
             if "engagement" in kpi_results:
                 eng = kpi_results["engagement"]
-                report += f"""**🎯 ENGAGEMENT KPIs:**
-• Leave Request Efficiency: {eng['leave_request_efficiency']:.1f}% {'✅' if eng['leave_request_efficiency'] >= 90 else '⚠️' if eng['leave_request_efficiency'] >= 75 else '❌'}
-• Pending Requests Backlog: {eng['pending_requests_backlog']} {'✅' if eng['pending_requests_backlog'] <= 5 else '❌'}
-• Avg. Request Lead Time: {eng['avg_leave_request_lead_time']:.1f} days
-
-"""
+                report += f"""**🎯 ENGAGEMENT KPIs:**\n• Leave Request Efficiency: {eng['leave_request_efficiency']:.1f}% {'✅' if eng['leave_request_efficiency'] >= 90 else '⚠️' if eng['leave_request_efficiency'] >= 75 else '❌'}\n• Pending Requests Backlog: {eng['pending_requests_backlog']} {'✅' if eng['pending_requests_backlog'] <= 5 else '❌'}\n• Avg. Request Lead Time: {eng['avg_leave_request_lead_time']:.1f} days\n\n"""
             
-            report += """**📊 KPI PERFORMANCE INDICATORS:**
-✅ = Target Met | ⚠️ = Needs Attention | ❌ = Below Target
-
-**🎯 RECOMMENDED TARGETS:**
-• Attendance Rate: ≥85%
-• Absence Rate: ≤5%
-• Leave Request Efficiency: ≥90%
-• Pending Requests: ≤5
-
-**📈 IMPROVEMENT ACTIONS:**
-• Review any KPIs marked with ⚠️ or ❌
-• Implement targeted improvement plans
-• Monitor progress monthly
-• Celebrate achievements for ✅ metrics"""
+            report += """**📊 KPI PERFORMANCE INDICATORS:**\n✅ = Target Met | ⚠️ = Needs Attention | ❌ = Below Target\n\n**🎯 RECOMMENDED TARGETS:**\n• Attendance Rate: ≥85%\n• Absence Rate: ≤5%\n• Leave Request Efficiency: ≥90%\n• Pending Requests: ≤5\n\n**📈 IMPROVEMENT ACTIONS:**\n• Review any KPIs marked with ⚠️ or ❌\n• Implement targeted improvement plans\n• Monitor progress monthly\n• Celebrate achievements for ✅ metrics"""
             
             return report
             
         except Exception as e:
             return f"An error occurred while tracking HR KPIs: {e}"
+
+@tool
+def generate_quarterly_report() -> str:
+    """
+    Generates a quarterly report with a downloadable link.
+    """
+    return json.dumps({
+        "action_type": "download_report",
+        "url": "/path/to/dummy/report.pdf"
+    })
 
 # Export all analytics tools
 analytics_tools = [
@@ -828,5 +745,6 @@ analytics_tools = [
     predict_employee_turnover_risk,
     generate_compliance_report,
     create_custom_hr_report,
-    track_hr_kpis
+    track_hr_kpis,
+    generate_quarterly_report
 ]

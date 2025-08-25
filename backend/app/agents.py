@@ -33,6 +33,7 @@ hr_database_agent = create_react_agent(
         "- When showing detailed data, use tables when appropriate\n"
     )
 )
+hr_database_agent.display_name = "HR Database Assistant"
 
 # === HR Policy Agent ===
 hr_policy_agent = create_react_agent(
@@ -56,6 +57,7 @@ hr_policy_agent = create_react_agent(
         "- For policy questions, provide relevant excerpts and summaries\n"
     )
 )
+hr_policy_agent.display_name = "HR Policy Assistant"
 
 # === HR Attendance Agent ===
 # This agent specializes in attendance-related queries
@@ -78,6 +80,7 @@ hr_attendance_agent = create_react_agent(
         "- When showing attendance data, organize by date or employee as appropriate\n"
     )
 )
+hr_attendance_agent.display_name = "HR Attendance Assistant"
 
 # === HR Performance Management Agent ===
 hr_performance_agent = create_react_agent(
@@ -100,6 +103,7 @@ hr_performance_agent = create_react_agent(
         "- When creating goals, ensure they are SMART (Specific, Measurable, Achievable, Relevant, Time-bound)\n"
     )
 )
+hr_performance_agent.display_name = "HR Performance Assistant"
 
 # === HR Training & Development Agent ===
 hr_training_agent = create_react_agent(
@@ -122,6 +126,7 @@ hr_training_agent = create_react_agent(
         "- When recommending training, consider employee's current role and career aspirations\n"
     )
 )
+hr_training_agent.display_name = "HR Training Assistant"
 
 # === HR Analytics & Reporting Agent ===
 hr_analytics_agent = create_react_agent(
@@ -144,11 +149,13 @@ hr_analytics_agent = create_react_agent(
         "- When presenting data, include context and interpretation for business users\n"
     )
 )
+hr_analytics_agent.display_name = "HR Analytics Assistant"
+
 
 # === Create Supervisor System ===
 def create_hr_supervisor_system():
     """
-    Creates and returns the compiled HR multi-agent supervisor system.
+    Creates and returns the compiled HR multi-agent supervisor system. 
     
     The supervisor manages six specialized agents:
     1. HR Database Agent - Employee data and general database queries
@@ -172,38 +179,25 @@ def create_hr_supervisor_system():
         prompt=(
             "You are an intelligent HR Assistant Supervisor managing a team of specialized HR agents. "
             "Your team consists of:\n\n"
-            "🔍 **hr_database_agent**: Expert in employee data, departments, and general database queries\n"
+            f"🔍 **{hr_database_agent.display_name}**: Expert in employee data, departments, and general database queries\n"
             "   - Use for: employee listings, department info, employee details, general HR data queries\n\n"
-            "📋 **hr_policy_agent**: Expert in HR policies, leave management, and benefits\n"
+            f"📋 **{hr_policy_agent.display_name}**: Expert in HR policies, leave management, and benefits\n"
             "   - Use for: policy questions, leave requests, leave balances, holidays, company procedures\n\n"
-            "📊 **hr_attendance_agent**: Expert in attendance tracking and analysis\n"
+            f"📊 **{hr_attendance_agent.display_name}**: Expert in attendance tracking and analysis\n"
             "   - Use for: attendance records, who was present/absent, attendance patterns, daily reports\n\n"
-            "🎯 **hr_performance_agent**: Expert in performance management and employee development\n"
+            f"🎯 **{hr_performance_agent.display_name}**: Expert in performance management and employee development\n"
             "   - Use for: performance goals, reviews, 360 feedback, performance summaries, team performance\n\n"
-            "📚 **hr_training_agent**: Expert in learning & development and skill management\n"
+            f"📚 **{hr_training_agent.display_name}**: Expert in learning & development and skill management\n"
             "   - Use for: skill assessments, training recommendations, learning paths, training tracking\n\n"
-            "📈 **hr_analytics_agent**: Expert in HR analytics, reporting, and data insights\n"
+            f"📈 **{hr_analytics_agent.display_name}**: Expert in HR analytics, reporting, and data insights\n"
             "   - Use for: HR metrics, KPIs, compliance reports, custom reports, turnover analysis, trends\n\n"
             "**Decision Guidelines:**\n"
             "- For employee info, departments, general data → delegate to hr_database_agent\n"
-            "- For policies, leave requests, benefits → delegate to hr_policy_agent\n"
-            "- For attendance records, patterns, daily reports → delegate to hr_attendance_agent\n"
-            "- For performance goals, reviews, feedback → delegate to hr_performance_agent\n"
-            "- For training, skills, learning paths → delegate to hr_training_agent\n"
-            "- For reports, analytics, KPIs, metrics → delegate to hr_analytics_agent\n"
-            "- If query involves multiple areas, choose the most relevant primary agent\n"
-            "- Always be helpful and professional in both Sinhala and English\n"
-            "- Provide clear, well-organized responses with proper formatting\n"
-        ),
-        supervisor_name="hr_supervisor",
-        # Enable message forwarding to avoid supervisor rewriting agent responses
-        output_mode="last_message"
+        )
     )
     
+    # Compile the supervisor workflow to make it executable
     return supervisor_workflow.compile()
 
-# === Create the compiled agent system ===
+# Create and compile the HR agent system
 hr_agent_system = create_hr_supervisor_system()
-
-# === Export for use in main.py ===
-__all__ = ['hr_agent_system']

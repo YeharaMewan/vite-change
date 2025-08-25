@@ -1,0 +1,77 @@
+You are a senior AI/ML engineer tasked with refactoring and improving an existing HR chatbot application. Your goal is to apply modern best practices to make the application more robust, user-friendly, and maintainable. The application consists of a backend (Python with FastAPI) and a frontend (React with Vite).
+
+Current Architecture:
+
+Backend: backend/app/agents.py, backend/app/hr_analytics_tools.py, backend/app/streaming_endpoint.py
+
+Agents are defined with non-user-friendly names (e.g., hr_analytics_agent).
+
+Tools return raw data or text that may not be formatted for the user.
+
+Frontend: frontend/src/App.jsx, frontend/src/components/StreamingHRChat.jsx
+
+The chat history author is a generated ID (e.g., Chat 17560150).
+
+Messages containing Markdown are not rendered correctly, showing raw asterisks (e.g., "Performance Management").
+
+There is no component to handle special "actions" like clickable buttons.
+
+Task Requirements:
+
+Refactor Agent Naming (Backend):
+
+Go to backend/app/agents.py.
+
+Change the internal agent names (the Python variable names) to be more descriptive and follow standard Python conventions (e.g., hr_analytics_agent is fine).
+
+Crucially, introduce a new, user-friendly display_name attribute for each agent class. For example, HR_ANALYTICS_AGENT should have a display_name of "HR Analytics Assistant". The HR_PERFORMANCE_AGENT should be renamed to "HR Performance Assistant," and so on.
+
+Update the code to use this new display_name when generating the chat history or any user-facing messages. This ensures a consistent, human-readable name for the bot.
+
+Improve Output Formatting (Frontend):
+
+Go to frontend/src/components/StreamingHRChat.jsx.
+
+The raw asterisks (**) are due to the backend sending Markdown. Instead of removing them on the backend, which is bad practice, you should handle the Markdown rendering on the frontend.
+
+Integrate a Markdown rendering library (like react-markdown or a similar solution) to correctly display bold, italic, and other Markdown elements in the streamed chat messages.
+
+Ensure this change does not break the streaming functionality.
+
+Update Chat History Names (Frontend):
+
+Go to frontend/src/components/StreamingHRChat.jsx.
+
+The current author name in the messages state is dynamic. Change the AI's author name to a static, user-friendly string like "HR Assistant".
+
+Update the logic where new messages are added to the messages array to consistently use this new author name for all AI responses.
+
+Implement an Action Component (Frontend & Backend):
+
+Backend (backend/app/hr_analytics_tools.py):
+
+Create a new tool function, for example, generate_quarterly_report. This function will not actually generate a report but will simulate it by returning a JSON object.
+
+The JSON object should have a special key, like "action_type": "download_report", and a url to a placeholder document (e.g., a dummy report file link). This structured output is a best practice for passing actions from the backend to the frontend.
+
+Frontend (frontend/src/components/StreamingHRChat.jsx):
+
+Add a new component called ActionMessage or similar. This component will check the message content for the special "action_type" key.
+
+If the key exists, the component will render a button (e.g., "Download Report") with a link to the url provided in the JSON payload.
+
+Ensure the StreamingHRChat component's message rendering logic is updated to check for this new action type and use the ActionMessage component when appropriate.
+
+The button should be styled to be prominent and user-friendly (e.g., with a background color and some padding).
+
+Output:
+
+Provide the complete, updated code for the following files:
+
+backend/app/agents.py
+
+backend/app/hr_analytics_tools.py
+
+frontend/src/components/StreamingHRChat.jsx
+
+By implementing these changes, you will transform the application into a more professional, functional, and maintainable product. You will demonstrate a mastery of full-stack development best practices, including structured API responses and dynamic frontend rendering.

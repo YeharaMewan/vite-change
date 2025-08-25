@@ -1,22 +1,37 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStreamingChat } from '../hooks/useStreamingChat';
+import ReactMarkdown from 'react-markdown';
 import { 
   SparklesIcon, 
   ArrowUpIcon,
   MicrophoneIcon,
-  Bars3Icon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
+
+const ActionMessage = ({ action }) => {
+  if (action.action_type === 'download_report') {
+    return (
+      <a 
+        href={action.url} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="inline-block bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors mt-2"
+      >
+        Download Report
+      </a>
+    );
+  }
+  return null;
+};
 
 export default function StreamingHRChat() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
-  const { streamChat, isStreaming, streamedResponse, error } = useStreamingChat();
+  const { streamChat, isStreaming, streamedResponse } = useStreamingChat();
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
   useEffect(() => {
-    // Auto scroll to bottom when streaming
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
@@ -48,12 +63,27 @@ export default function StreamingHRChat() {
       const response = await streamChat(currentInput);
       
       if (response) {
-        const assistantMessage = {
-          id: Date.now() + 1,
-          text: response,
-          sender: 'assistant',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
+        let assistantMessage;
+        try {
+          const parsedResponse = JSON.parse(response);
+          if (parsedResponse.action_type) {
+            assistantMessage = {
+              id: Date.now() + 1,
+              action: parsedResponse,
+              sender: 'HR Assistant',
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            };
+          } else {
+            throw new Error('Not an action');
+          }
+        } catch (e) {
+          assistantMessage = {
+            id: Date.now() + 1,
+            text: response,
+            sender: 'HR Assistant',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+        }
         
         setMessages(prev => [...prev, assistantMessage]);
       }
@@ -61,7 +91,7 @@ export default function StreamingHRChat() {
       const errorMessage = {
         id: Date.now() + 1,
         text: 'Sorry, I encountered an error. Please try again.',
-        sender: 'assistant',
+        sender: 'HR Assistant',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -73,36 +103,6 @@ export default function StreamingHRChat() {
       e.preventDefault();
       sendMessage();
     }
-  };
-
-  const formatMessage = (text) => {
-    if (!text) return null;
-    
-    const lines = text.split('\n');
-    return lines.map((line, i) => {
-      if (line.startsWith('- ') || line.startsWith('* ')) {
-        return (
-          <div key={i} className="flex items-start gap-2 my-1">
-            <span className="text-white font-bold text-sm mt-1">•</span>
-            <span className="flex-1 text-white">{line.slice(2)}</span>
-          </div>
-        );
-      } else if (line.startsWith('**') && line.endsWith('**')) {
-        return (
-          <div key={i} className="font-semibold my-2 text-white">
-            {line.slice(2, -2)}
-          </div>
-        );
-      } else if (line.trim() === '') {
-        return <div key={i} className="h-2" />;
-      } else {
-        return (
-          <div key={i} className="text-white">
-            {line}
-          </div>
-        );
-      }
-    });
   };
 
   return (
@@ -133,7 +133,7 @@ export default function StreamingHRChat() {
             {messages.map((message) => (
               <div key={message.id} className="group">
                 <div className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : ''}`}>
-                  {message.sender === 'assistant' && (
+                  {message.sender !== 'user' && (
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <SparklesIcon className="w-4 h-4 text-white" />
                     </div>
@@ -145,9 +145,10 @@ export default function StreamingHRChat() {
                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-2xl inline-block' 
                         : 'text-white bg-gray-800/30 p-4 rounded-2xl'
                     }`}>
-                      {formatMessage(message.text)}
+                      {message.text && <ReactMarkdown>{message.text}</ReactMarkdown>}
+                      {message.action && <ActionMessage action={message.action} />}
                       
-                      {message.sender === 'assistant' && (
+                      {message.sender !== 'user' && (
                         <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-700">
                           <CheckCircleIcon className="w-4 h-4 text-green-400" />
                           <span className="text-xs text-gray-400">{message.timestamp}</span>
@@ -169,7 +170,7 @@ export default function StreamingHRChat() {
                   
                   <div className="max-w-3xl">
                     <div className="text-white bg-gray-800/30 p-4 rounded-2xl">
-                      {formatMessage(streamedResponse)}
+                      <ReactMarkdown>{streamedResponse}</ReactMarkdown>
                       <div className="inline-block w-2 h-5 bg-blue-400 animate-pulse ml-1"></div>
                     </div>
                   </div>
