@@ -27,7 +27,7 @@ const ActionMessage = ({ action }) => {
 export default function StreamingHRChat() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
-  const { streamChat, isStreaming, streamedResponse } = useStreamingChat();
+  const { streamChat, isStreaming, streamedResponse, currentActivity } = useStreamingChat();
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -76,7 +76,7 @@ export default function StreamingHRChat() {
           } else {
             throw new Error('Not an action');
           }
-        } catch (e) {
+        } catch {
           assistantMessage = {
             id: Date.now() + 1,
             text: response,
@@ -87,7 +87,7 @@ export default function StreamingHRChat() {
         
         setMessages(prev => [...prev, assistantMessage]);
       }
-    } catch (err) {
+    } catch {
       const errorMessage = {
         id: Date.now() + 1,
         text: 'Sorry, I encountered an error. Please try again.',
@@ -120,9 +120,12 @@ export default function StreamingHRChat() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            <div className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-blue-400 animate-pulse' : 'bg-green-400'}`}></div>
             <span className="text-sm text-gray-400">
-              {isStreaming ? 'Streaming...' : 'Online'}
+              {isStreaming 
+                ? (currentActivity ? currentActivity.replace(/🔧|🤖|🔄|✅/g, '').trim() : 'Streaming...') 
+                : 'Online'
+              }
             </span>
           </div>
         </div>
@@ -178,8 +181,27 @@ export default function StreamingHRChat() {
               </div>
             )}
 
-            {/* Typing Indicator */}
-            {isStreaming && !streamedResponse && (
+            {/* Activity Indicator - Shows agent/tool activity */}
+            {isStreaming && currentActivity && !streamedResponse && (
+              <div className="group">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
+                    <SparklesIcon className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                    </div>
+                    <span className="text-sm font-medium">{currentActivity}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Default Typing Indicator - When no specific activity */}
+            {isStreaming && !streamedResponse && !currentActivity && (
               <div className="group">
                 <div className="flex gap-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
@@ -191,7 +213,7 @@ export default function StreamingHRChat() {
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                     </div>
-                    <span className="text-sm">HR Assistant is processing...</span>
+                    <span className="text-sm">HR Assistant is connecting...</span>
                   </div>
                 </div>
               </div>
@@ -246,7 +268,12 @@ export default function StreamingHRChat() {
               <div>HR Assistant with real-time streaming responses</div>
               <div className="flex items-center gap-1">
                 <div className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-blue-400 animate-pulse' : 'bg-green-400'}`}></div>
-                <span>{isStreaming ? 'Streaming' : 'Ready'}</span>
+                <span>
+                  {isStreaming 
+                    ? (currentActivity ? currentActivity.replace(/🔧|🤖|🔄|✅/g, '').trim() : 'Streaming') 
+                    : 'Ready'
+                  }
+                </span>
               </div>
             </div>
           </div>

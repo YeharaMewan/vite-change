@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import HumanMessage
-from langchain_core.callbacks import AsyncCallbackHandler
 from typing import AsyncGenerator, Any, Dict, List, Optional
 import json
 import asyncio
@@ -10,49 +9,9 @@ from datetime import datetime
 from .agents import hr_agent_system
 from .memory_manager import MemoryManager
 
-class StreamingCallbackHandler(AsyncCallbackHandler):
-    def __init__(self):
-        self.tokens = []
-        self.current_agent = ""
-    
-    async def on_llm_new_token(self, token: str, **kwargs) -> None:
-        """Called when LLM generates a new token"""
-        self.tokens.append({
-            "type": "token",
-            "content": token,
-            "agent": self.current_agent,
-            "timestamp": datetime.now().isoformat()
-        })
-    
-    async def on_agent_action(self, action, **kwargs) -> None:
-        """Called when an agent takes an action"""
-        self.tokens.append({
-            "type": "agent_action", 
-            "agent": action.tool,
-            "action": str(action),
-            "timestamp": datetime.now().isoformat()
-        })
-    
-    async def on_tool_start(self, serialized: Dict[str, Any], input_str: str, **kwargs) -> None:
-        """Called when a tool starts"""
-        self.tokens.append({
-            "type": "tool_start",
-            "tool": serialized.get("name", "unknown"),
-            "input": input_str,
-            "timestamp": datetime.now().isoformat()
-        })
-    
-    async def on_tool_end(self, output: str, **kwargs) -> None:
-        """Called when a tool ends"""
-        self.tokens.append({
-            "type": "tool_end",
-            "output": output[:200] + "..." if len(output) > 200 else output,
-            "timestamp": datetime.now().isoformat()
-        })
-
 async def stream_hr_response(query: str, session_id: Optional[str] = None) -> AsyncGenerator[str, None]:
     """
-    Streams HR agent responses in real-time using Server-Sent Events format
+    Streams HR agent responses in real-time using LangGraph's astream_events for true streaming
     """
     memory = MemoryManager()
     sid = session_id or "default"
@@ -73,49 +32,99 @@ async def stream_hr_response(query: str, session_id: Optional[str] = None) -> As
         if context_snippet:
             user_content = f"{context_snippet}\n\nCurrent question: {query}"
         
-        # Set up streaming callback
-        streaming_handler = StreamingCallbackHandler()
-        
         # Configure the agent system for streaming
         initial_state = {
             "messages": [HumanMessage(content=user_content)]
         }
         
         # Yield initial connection message
-        yield f"data: {json.dumps({'type': 'start', 'message': 'Processing your HR request...'})}\n\n"
+        yield f"data: {json.dumps({'type': 'start', 'message': 'Connected to HR Assistant'})}\n\n"
         
-        # For real streaming, we need to use astream instead of invoke
-        # Note: This requires LangGraph to support async streaming
+        # Variables to accumulate the final response for storage
+        final_response_parts = []
+        current_tool = None
+        
         try:
-            # Simulate streaming for now - replace with actual streaming when available
-            yield f"data: {json.dumps({'type': 'agent_thinking', 'message': '🤖 HR Supervisor analyzing your request...'})}\n\n"
-            await asyncio.sleep(0.1)
+            # Use astream_events for true streaming - this streams events as they happen
+            async for event in hr_agent_system.astream_events(initial_state, version="v2"):
+                event_type = event.get("event")
+                
+                # Handle different types of events from the agent system
+                if event_type == "on_chat_model_start":
+                    # LLM is starting to generate a response
+                    model_name = event.get("name", "Unknown Model")
+                    yield f"data: {json.dumps({'type': 'llm_start', 'model': model_name, 'message': f'🤖 {model_name} is thinking...'})}\n\n"
+                
+                elif event_type == "on_chat_model_stream":
+                    # Stream individual tokens from the LLM
+                    chunk = event.get("data", {}).get("chunk")
+                    if chunk and hasattr(chunk, 'content') and chunk.content:
+                        token = chunk.content
+                        final_response_parts.append(token)
+                        yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+                
+                elif event_type == "on_tool_start":
+                    # A tool is being called
+                    tool_data = event.get("data", {})
+                    tool_name = event.get("name", "Unknown Tool")
+                    current_tool = tool_name
+                    tool_input = tool_data.get("input", {})
+                    
+                    yield f"data: {json.dumps({'type': 'tool_start', 'tool': tool_name, 'input': str(tool_input)[:200]})}\n\n"
+                
+                elif event_type == "on_tool_end":
+                    # A tool has finished execution
+                    tool_data = event.get("data", {})
+                    tool_output = tool_data.get("output", "")
+                    
+                    # Truncate long outputs for cleaner streaming
+                    if len(str(tool_output)) > 300:
+                        display_output = str(tool_output)[:300] + "... (truncated)"
+                    else:
+                        display_output = str(tool_output)
+                    
+                    yield f"data: {json.dumps({'type': 'tool_end', 'tool': current_tool, 'output': display_output})}\n\n"
+                    current_tool = None
+                
+                elif event_type == "on_chain_start":
+                    # Agent or chain is starting
+                    chain_name = event.get("name", "")
+                    if "agent" in chain_name.lower():
+                        yield f"data: {json.dumps({'type': 'agent_start', 'agent': chain_name, 'message': f'🔄 Starting {chain_name}...'})}\n\n"
+                
+                elif event_type == "on_chain_end":
+                    # Agent or chain has finished
+                    chain_name = event.get("name", "")
+                    if "agent" in chain_name.lower():
+                        yield f"data: {json.dumps({'type': 'agent_end', 'agent': chain_name, 'message': f'✅ {chain_name} completed'})}\n\n"
             
-            # Execute the agent system
-            response = hr_agent_system.invoke(initial_state)
-            final_message = response["messages"][-1]
-            response_text = final_message.content
+            # Compile final response and store it
+            final_response = "".join(final_response_parts)
             
-            # Simulate streaming the response word by word
-            words = response_text.split(' ')
-            current_text = ""
+            # If no tokens were collected (which might happen with some tool-only responses),
+            # try to get the final message from a direct invocation result
+            if not final_response.strip():
+                try:
+                    result = hr_agent_system.invoke(initial_state)
+                    if result and "messages" in result and result["messages"]:
+                        final_response = result["messages"][-1].content
+                except Exception:
+                    final_response = "Response completed successfully."
             
-            for i, word in enumerate(words):
-                current_text += word + " "
-                yield f"data: {json.dumps({'type': 'token', 'content': word + ' ', 'partial_response': current_text})}\n\n"
-                await asyncio.sleep(0.05)  # Simulate typing delay
+            # Store assistant response in memory
+            if final_response.strip():
+                memory.add_message(sid, "assistant", final_response, {"ts": datetime.now().isoformat()})
             
-            # Store assistant response
-            memory.add_message(sid, "assistant", response_text, {"ts": datetime.now().isoformat()})
-            
-            # Yield completion message
-            yield f"data: {json.dumps({'type': 'complete', 'final_response': response_text})}\n\n"
+            # Send completion message
+            yield f"data: {json.dumps({'type': 'complete', 'final_response': final_response})}\n\n"
             
         except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'message': f'Agent error: {str(e)}'})}\n\n"
+            error_message = f'Streaming error: {str(e)}'
+            yield f"data: {json.dumps({'type': 'error', 'message': error_message})}\n\n"
             
     except Exception as e:
-        yield f"data: {json.dumps({'type': 'error', 'message': f'Streaming error: {str(e)}'})}\n\n"
+        error_message = f'Setup error: {str(e)}'
+        yield f"data: {json.dumps({'type': 'error', 'message': error_message})}\n\n"
 
 # Add this to your FastAPI app
 async def chat_stream_endpoint(query: str, session_id: Optional[str] = None):
