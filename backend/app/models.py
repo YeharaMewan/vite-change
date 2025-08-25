@@ -2,6 +2,8 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Date, Text, Boolean
 from sqlalchemy.orm import relationship
 from .database import Base
 from pgvector.sqlalchemy import Vector
+from pydantic import BaseModel
+from typing import Optional
 
 class Department(Base):
     __tablename__ = "departments"
@@ -61,3 +63,8 @@ class LeaveRequest(Base):
     status = Column(String(50), default='pending')
 
     employee = relationship("Employee", back_populates="leave_requests")
+
+# Pydantic models for API requests
+class ChatRequest(BaseModel):
+    query: str
+    session_id: Optional[str] = None

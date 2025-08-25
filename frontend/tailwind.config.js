@@ -25,6 +25,12 @@ export default {
       colors: {
         gray: {
           950: '#030712',
+        },
+        'chatgpt': {
+          'sidebar': '#202123',
+          'main': '#343541',
+          'user-msg': '#343541',
+          'ai-msg': '#444654',
         }
       },
       typography: {

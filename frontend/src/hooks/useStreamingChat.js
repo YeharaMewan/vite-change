@@ -13,7 +13,7 @@ export const useStreamingChat = () => {
         setError(null);
 
         try {
-            const response = await fetch('/api/chat/stream', {
+            const response = await fetch('http://localhost:8000/chat/stream', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -27,6 +27,7 @@ export const useStreamingChat = () => {
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
+            let accumulatedResponse = '';
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -41,63 +42,50 @@ export const useStreamingChat = () => {
                         try {
                             const data = JSON.parse(line.slice(6));
                             
-                            switch (data.type) {
-                                case 'start':
-                                    setCurrentActivity('🔄 ' + data.message);
-                                    break;
-                                
-                                case 'llm_start':
-                                    setCurrentActivity('🤖 ' + data.message);
-                                    break;
-                                
-                                case 'agent_start':
-                                    setCurrentActivity('🔄 ' + data.message);
-                                    break;
-                                
-                                case 'tool_start':
-                                    setCurrentActivity(`🔧 Using tool: ${data.tool}`);
-                                    break;
-                                
-                                case 'tool_end':
-                                    setCurrentActivity(`✅ Tool ${data.tool} completed`);
-                                    // Clear activity after a brief display
-                                    setTimeout(() => setCurrentActivity(''), 1000);
-                                    break;
-                                
-                                case 'agent_end':
-                                    setCurrentActivity('✅ ' + data.message);
-                                    // Clear activity after a brief display
-                                    setTimeout(() => setCurrentActivity(''), 1000);
-                                    break;
-                                
-                                case 'token':
-                                    // Clear activity when tokens start flowing
-                                    setCurrentActivity('');
-                                    setStreamedResponse(prev => prev + data.content);
-                                    break;
-                                
-                                case 'complete':
-                                    console.log('Stream completed');
-                                    setCurrentActivity('');
-                                    setIsStreaming(false);
-                                    return data.final_response;
-                                
-                                case 'error':
-                                    throw new Error(data.message);
-                                
-                                default:
-                                    console.log('Unhandled event type:', data.type, data);
+                            if (data.content) {
+                                accumulatedResponse += data.content;
+                                setStreamedResponse(accumulatedResponse);
+                            } else if (data.done) {
+                                setIsStreaming(false);
+                                setCurrentActivity('');
+                                return accumulatedResponse;
                             }
-                        } catch {
-                            console.warn('Failed to parse SSE data:', line);
+                        } catch (parseError) {
+                            console.warn('Failed to parse SSE data:', line, parseError);
                         }
                     }
                 }
             }
-        } catch (err) {
-            setError(err.message);
+            // Return the final response if streaming completes
             setIsStreaming(false);
             setCurrentActivity('');
+            return accumulatedResponse;
+        } catch (err) {
+            console.error('Streaming failed, trying non-streaming API:', err);
+            // Fallback to non-streaming API
+            try {
+                const response = await fetch('http://localhost:8000/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query, session_id: sessionId })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                setIsStreaming(false);
+                setCurrentActivity('');
+                return data.response;
+            } catch (fallbackErr) {
+                setError(fallbackErr.message);
+                setIsStreaming(false);
+                setCurrentActivity('');
+                return null;
+            }
         }
     }, []);
 

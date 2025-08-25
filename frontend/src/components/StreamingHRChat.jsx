@@ -109,7 +109,7 @@ export default function StreamingHRChat() {
     <div className="flex h-screen bg-gray-900 text-white">
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+        <div className="flex items-center justify-between p-4 bg-gray-900">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
               <SparklesIcon className="w-6 h-6 text-white" />
@@ -135,29 +135,30 @@ export default function StreamingHRChat() {
           <div className="max-w-4xl mx-auto space-y-6">
             {messages.map((message) => (
               <div key={message.id} className="group">
-                <div className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : ''}`}>
-                  {message.sender !== 'user' && (
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <SparklesIcon className="w-4 h-4 text-white" />
-                    </div>
-                  )}
-                  
-                  <div className={`max-w-3xl ${message.sender === 'user' ? 'text-right' : ''}`}>
-                    <div className={`${
+                <div className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-2xl ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                    <div className={`inline-block p-4 rounded-2xl ${
                       message.sender === 'user' 
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-2xl inline-block' 
-                        : 'text-white bg-gray-800/30 p-4 rounded-2xl'
-                    }`}>
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' 
+                        : 'text-white bg-gray-900/50'
+                    } transition-colors`}>
                       {message.text && <ReactMarkdown>{message.text}</ReactMarkdown>}
                       {message.action && <ActionMessage action={message.action} />}
                       
                       {message.sender !== 'user' && (
-                        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-700">
+                        <div className="flex items-center gap-2 mt-3 pt-2">
                           <CheckCircleIcon className="w-4 h-4 text-green-400" />
                           <span className="text-xs text-gray-400">{message.timestamp}</span>
                         </div>
                       )}
                     </div>
+                    
+                    {/* User timestamp */}
+                    {message.sender === 'user' && message.timestamp && (
+                      <div className="text-xs text-gray-400 mt-2 text-right">
+                        {message.timestamp}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -166,13 +167,9 @@ export default function StreamingHRChat() {
             {/* Real-time Streaming Response */}
             {isStreaming && streamedResponse && (
               <div className="group">
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
-                    <SparklesIcon className="w-4 h-4 text-white" />
-                  </div>
-                  
-                  <div className="max-w-3xl">
-                    <div className="text-white bg-gray-800/30 p-4 rounded-2xl">
+                <div className="flex justify-start">
+                  <div className="max-w-2xl text-left">
+                    <div className="text-white bg-gray-900/50 p-4 rounded-2xl inline-block">
                       <ReactMarkdown>{streamedResponse}</ReactMarkdown>
                       <div className="inline-block w-2 h-5 bg-blue-400 animate-pulse ml-1"></div>
                     </div>
@@ -184,10 +181,7 @@ export default function StreamingHRChat() {
             {/* Activity Indicator - Shows agent/tool activity */}
             {isStreaming && currentActivity && !streamedResponse && (
               <div className="group">
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
-                    <SparklesIcon className="w-4 h-4 text-white" />
-                  </div>
+                <div className="flex justify-start">
                   <div className="flex items-center gap-2 text-gray-300">
                     <div className="flex gap-1">
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
@@ -203,10 +197,7 @@ export default function StreamingHRChat() {
             {/* Default Typing Indicator - When no specific activity */}
             {isStreaming && !streamedResponse && !currentActivity && (
               <div className="group">
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
-                    <SparklesIcon className="w-4 h-4 text-white" />
-                  </div>
+                <div className="flex justify-start">
                   <div className="flex items-center gap-2 text-gray-400">
                     <div className="flex gap-1">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
@@ -224,9 +215,9 @@ export default function StreamingHRChat() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 bg-gray-900">
           <div className="max-w-4xl mx-auto">
-            <div className="relative bg-gray-800 rounded-2xl border-2 border-gray-700 focus-within:border-blue-500 transition-colors">
+            <div className="relative bg-gray-800 rounded-2xl focus-within:ring-2 focus-within:ring-blue-500/40 transition-all">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -256,7 +247,7 @@ export default function StreamingHRChat() {
                   className={`p-2 rounded-xl transition-colors ${
                     input.trim() && !isStreaming
                       ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700'
-                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                   }`}
                 >
                   <ArrowUpIcon className="w-5 h-5" />

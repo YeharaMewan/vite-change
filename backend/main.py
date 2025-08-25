@@ -7,6 +7,7 @@ from langchain_core.messages import HumanMessage
 from app.agents import hr_agent_system
 from app.memory_manager import MemoryManager
 from app.streaming_endpoint import chat_stream_endpoint
+from app.models import ChatRequest
 from datetime import datetime
 from fastapi import HTTPException
 from typing import Optional
@@ -28,18 +29,18 @@ async def read_root():
     return {"message": "Welcome to the HR Agentic Application API!"}
 
 @app.post("/chat", tags=["Agent"])
-async def chat_with_agent(query: str, session_id: Optional[str] = None):
+async def chat_with_agent(request: ChatRequest):
     """
     Standard synchronous chat endpoint (non-streaming)
     """
-    return await _chat_sync(query, session_id)
+    return await _chat_sync(request.query, request.session_id)
 
 @app.post("/chat/stream", tags=["Agent"])
-async def chat_with_agent_stream(query: str, session_id: Optional[str] = None):
+async def chat_with_agent_stream(request: ChatRequest):
     """
     Streaming chat endpoint with real-time responses
     """
-    return await chat_stream_endpoint(query, session_id)
+    return await chat_stream_endpoint(request.query, request.session_id)
 
 async def _chat_sync(query: str, session_id: Optional[str] = None):
     """
