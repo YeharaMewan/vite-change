@@ -19,7 +19,7 @@ export default function Sidebar({ isOpen, onToggle, onNewChat, chatHistory = [],
       {/* Desktop Sidebar */}
       <div className={`${
         isOpen ? 'translate-x-0' : '-translate-x-full'
-      } fixed inset-y-0 left-0 z-40 w-80 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col sidebar-transition bg-gray-900`}>
+      } fixed inset-y-0 left-0 z-40 w-80 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col sidebar-transition bg-gray-800`}>
         
         {/* Sidebar Header with Toggle */}
         <div className="flex items-center justify-between p-4">
